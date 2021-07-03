@@ -2,14 +2,13 @@
 import random
 from asciicards import assignArt
 
-class player():
+class Player():
     def __init__(self):
         self.name = ""
         self.age = 0
         self.stack = 0
         self.position = ""
-        self.card1 = 0
-        self.card2 = 0
+        self.card = []
 
     def print_register(self):
         print("---------------------------------------------------------------------------------------------------------------------------------")
@@ -88,10 +87,12 @@ class StandardDeck(list):
             deal_card = self[0]
             self.pop(0)
             return deal_card
+            
+        
        
 
 
-class game():
+class Game():
         def __init__(self):
             self.buyin = 0
             self.pot = 0
@@ -164,14 +165,13 @@ print("-------------------------------------------------------------------------
     
 
 
-player = player()
+player = Player()
 player.print_register()
 
-game = game()
+game = Game()
 game.setup()
 
 #print(player.name,player.age)
-print(game.buyin,game.smallblind,game.bigblind)
 
 gamecontinue = True
 preflop = False
@@ -191,27 +191,59 @@ while gamecontinue == True:
     print("                                                          Preflop                                                                ")
     print("---------------------------------------------------------------------------------------------------------------------------------")
 
-    print(player.name + " hand: ")
-    player.card1 = deck.deal()
-    player.card2 = deck.deal()
-
-    print(player.card1, " , ",player.card2)
-
-    botplayer = [game.numofbot]
+    #____________________init bot__________________________
+    """
+    botList = []
 
     for i in range(game.numofbot):
-
-        card.showing = False
-        print("Bot", i + 1, " hand:")
-        for x in range(2):
-            deal_card = deck.deal()
+        bot = Player()
+        botList.append(bot)
         
-    break
+    """
 
+    #_______________init table position________________
+    positionList = ["Dealer","Small-Blind", "Big-Blind", "UTG", "Middle", "Late-Middle"]
+    tableList = []
+    
+    #player
+    tableList.append(player)
+    
+    #init bot
+    for i in range(game.numofbot):
+        bot = Player()
+        bot.name = "Bot " + str(i+1)
+        tableList.append(bot)
 
+    #shuffle seating
+    random.shuffle(tableList)
 
-
-
-        
+    #asssign position
+    for i, ply in enumerate(tableList):
+        ply.position = positionList[i]
 
     
+
+    # _____________Deal all player & bot 2 cards____________________
+    """
+    print(player.name + " hand: ")
+
+    #deal 2 cards and store in list for player
+    player.card.append(deck.deal())
+    player.card.append(deck.deal()) 
+
+    print(player.card[0], ",",player.card[1])
+    """
+    
+    #deal 2 cards for each bot
+    for i, bot in enumerate(tableList):
+        print(bot.name , "hand:",)
+        bot.card.append(deck.deal())
+        bot.card.append(deck.deal())
+        print(bot.card[0],",",bot.card[1])
+        print("Position:", bot.position)
+
+    #_______________________Bet Preflop____________________________
+    
+
+    break
+
