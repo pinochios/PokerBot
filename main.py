@@ -2,6 +2,7 @@
 import random
 from asciicards import assignArt
 
+
 class Player():
     def __init__(self):
         self.name = ""
@@ -99,16 +100,14 @@ class Game():
             self.bigblind = 0
             self.smallblind = 0
             self.numofbot = 0
-            self.positionList = ["Dealer","Small-Blind", "Big-Blind", "UTG", "Middle", "Late-Middle"]
+            self.positionList = []
             self.tableList = []
+            self.activeplayer = []
             self.handtoplay = 0
             self.handcount = 0
 
 
         def setup(self,player_name,player_age):
-
-            
-            
 
             checkdigit = True
 
@@ -134,8 +133,8 @@ class Game():
 
                             if self.numofbot.isdigit():
                                 self.numofbot = int(self.numofbot)
-                                if self.numofbot > 5:
-                                    print("No more than 5 bot can be selected, please retry")
+                                if self.numofbot > 5 or self.numofbot < 1:
+                                    print("Invalid amount of bot, please retry")
                                     continue
                                 else:
                                     self.handtoplay = input("Please enter the amount of hand to play(Minimum-10 Maximum-30): ")
@@ -202,16 +201,42 @@ class Game():
                     print("Invalid amount")
                     continue
 
-        def setup_position(self,player,numofbot):
+        def setup_position(self,player,numofbot,handcount):
+
+            if handcount == 0:
+
+                if numofbot > 0:
+                    self.positionList.append("Dealer")
+                    self.positionList.append("Smallblind")
+                    
+                    if numofbot > 1:
+                        self.positionList.append("Bigblind")
+
+                        if numofbot > 2:
+                            self.positionList.append("UTG")
+
+                            if numofbot > 3:
+                                self.positionList.append("Middle Postion")
+
+                                if numofbot > 4:
+                                    self.positionList.append("Late Postion")
+
+
             
-            #player
+            #--------player--------
             self.tableList.append(player)
+            #set starting stack equals table buy-in
+            if handcount == 0:
+                player.stack = game.buyin
             
-            #init bot
+            #-------init bot-------
             for i in range(numofbot):
                 bot = Player()
                 bot.name = "Bot " + str(i+1)
                 self.tableList.append(bot)
+                #set starting stack equals table buy-in
+                if handcount == 0:
+                    bot.stack = game.buyin
 
             #shuffle seating
             random.shuffle(self.tableList)
@@ -219,6 +244,8 @@ class Game():
             #asssign position
             for i, ply in enumerate(self.tableList):
                 ply.position = self.positionList[i]
+
+        
 
        
 
@@ -253,7 +280,9 @@ turn = False
 river = False
 
 
-while gamecontinue == True:
+while gamecontinue == True and game.handcount <= game.handtoplay:
+
+    game.pot = 0
 
     card = Card(0,0)
     deck = StandardDeck()
@@ -276,7 +305,7 @@ while gamecontinue == True:
 
     #_______________init table position________________
 
-    game.setup_position(player,game.numofbot)
+    game.setup_position(player,game.numofbot,game.handcount)
 
 
 
@@ -298,9 +327,98 @@ while gamecontinue == True:
         bot.card.append(deck.deal_fromdeck())
         print(bot.card[0],",",bot.card[1])
         print("Position:", bot.position)
+        print("Stack:", bot.stack)
+
+    #reset all player to active
+    game.activeplayer = game.tableList
 
     #_______________________Bet Preflop____________________________
-    
+
+    x = Player()
+    bet_amount = game.bigblind
+    game.pot += (game.smallblind + game.bigblind)
+    preflop = True
+
+    while preflop == True:
+
+        actionlist = []
+        
+
+        for x in game.tableList:
+
+            valid_bet = False
+
+            print("----------------",x.name, "'s turn ----------------")
+
+
+            print("'c' - call | 'f' - fold | 'r' - raise | 'a' - allin")
+
+            decision = input("Decision: ")
+            
+            if decision == 'c':
+
+                x.stack -= bet_amount
+                game.pot += bet_amount
+                actionlist.append(False)
+
+            if decision == 'f':
+                
+                if x.position == 'Smallblind':
+                    x.stack -= game.smallblind
+                    
+                if x.position == 'Bigblind':
+                    x.stack -= game.bigblind
+
+                actionlist.append(False)
+
+                #game.activeplayer.remove(x)
+
+
+            if decision == 'r':
+
+                while valid_bet == False:
+
+                    input_amount = input("Please enter the amount of raise: ")
+                    
+                    if input_amount.isdigit():
+                        input_amount = int(input_amount)
+                        
+                        if input_amount >= bet_amount * 2:
+                            bet_amount = input_amount
+                            game.pot += bet_amount
+                            x.stack -= bet_amount
+                            actionlist.append(True)
+                            valid_bet = True
+                        else:
+                            print("Raise need to be at least 2 times of the last bet")
+                            continue
+                    
+                    else:
+                        print("Invalid amount")
+                        continue
+
+            if decision == 'a':
+                
+                bet_amount += x.stack
+                x.stack = 0
+
+        for i, bot in enumerate(game.tableList):
+            print(bot.name)
+            print("Stack:", bot.stack)
+
+        if True in actionlist:
+            continue
+        else:
+            preflop = False
+
+
+    print("End Preflop")
+        
+
+
+
+
+
 
     break
 
