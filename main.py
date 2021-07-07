@@ -83,7 +83,7 @@ class StandardDeck(list):
             random.shuffle(self)
             print("\n\n--deck shuffled--")
 
-        def deal(self):
+        def deal_fromdeck(self):
             deal_card = self[0]
             self.pop(0)
             return deal_card
@@ -99,18 +99,24 @@ class Game():
             self.bigblind = 0
             self.smallblind = 0
             self.numofbot = 0
+            self.positionList = ["Dealer","Small-Blind", "Big-Blind", "UTG", "Middle", "Late-Middle"]
+            self.tableList = []
+            self.handtoplay = 0
+            self.handcount = 0
 
-        def setup(self):
 
-            print("---------------------------------------------------------------------------------------------------------------------------------")
-            print("                                                          Game Set-Up                                                            ")
-            print("---------------------------------------------------------------------------------------------------------------------------------")
+        def setup(self,player_name,player_age):
+
             
             
 
             checkdigit = True
 
             while checkdigit:
+
+                print("---------------------------------------------------------------------------------------------------------------------------------")
+                print("                                                          Game Set-Up                                                            ")
+                print("---------------------------------------------------------------------------------------------------------------------------------")
 
                 self.buyin = input("Enter buy-in amount: ")
 
@@ -120,9 +126,9 @@ class Game():
                     
                     if self.smallblind.isdigit():
                         self.smallblind = int(self.smallblind)
-                        self.bigblind = input("Enter big-blind price: ")
+                        self.bigblind = self.smallblind * 2
 
-                        if self.bigblind.isdigit():
+                        if self.bigblind == self.smallblind * 2:
                             self.bigblind = int(self.bigblind)       
                             self.numofbot = input("Enter the amount of bot(max 5): ")
 
@@ -132,7 +138,53 @@ class Game():
                                     print("No more than 5 bot can be selected, please retry")
                                     continue
                                 else:
-                                    break
+                                    self.handtoplay = input("Please enter the amount of hand to play(Minimum-10 Maximum-30): ")
+                                    
+                                    if self.handtoplay.isdigit():
+                                        self.handtoplay = int(self.handtoplay)
+                                        
+                                        if self.handtoplay >= 10:
+
+                                            if self.handtoplay > 30:
+                                                print("Maximum of 30 hands, please retry")
+                                            else:
+                                                print("---------------------------------------------------------------------------------------------------------------------------------")
+                                                print("                                                       Selected settings                                                         ")
+                                                print("---------------------------------------------------------------------------------------------------------------------------------")
+                                                print("--Player Profile--")
+                                                print("Name:",player_name)
+                                                print("Age:",player_age)
+                                                print("\n")
+                                                print("--Game settings--")
+                                                print("Buy-in:",self.buyin)
+                                                print("Small-blind:",self.smallblind)
+                                                print("Big-blind:",self.bigblind)
+                                                print("Number of bot:",self.numofbot)
+                                                print("Playing hand:",self.handtoplay)
+                                                print("\n")
+
+
+                                                setup_complete = input("Press 'y' to confirm, 'n' to reset...")
+                                                
+                                                if setup_complete == "y":
+                                                    print("--Setup completed--")
+                                                    break
+                                                elif setup_complete == "n":
+                                                    continue
+                                                else:
+                                                    print("Invalid decision, game reset")
+                                                    continue
+
+                                            
+                                            
+                                        else:
+                                            print("Minimum of 10 hands, please retry")
+                                    else:
+                                        print("Invalid amount")
+                                        continue
+                                        
+
+                                    
 
                             else:
                                 print("Invalid amount")
@@ -149,6 +201,27 @@ class Game():
                 else:
                     print("Invalid amount")
                     continue
+
+        def setup_position(self,player,numofbot):
+            
+            #player
+            self.tableList.append(player)
+            
+            #init bot
+            for i in range(numofbot):
+                bot = Player()
+                bot.name = "Bot " + str(i+1)
+                self.tableList.append(bot)
+
+            #shuffle seating
+            random.shuffle(self.tableList)
+
+            #asssign position
+            for i, ply in enumerate(self.tableList):
+                ply.position = self.positionList[i]
+
+       
+
 
         
 print("\n\n\n\n")
@@ -167,9 +240,9 @@ print("-------------------------------------------------------------------------
 
 player = Player()
 player.print_register()
-
 game = Game()
-game.setup()
+game.setup(player.name,player.age)
+bot = Player()
 
 #print(player.name,player.age)
 
@@ -202,26 +275,10 @@ while gamecontinue == True:
     """
 
     #_______________init table position________________
-    positionList = ["Dealer","Small-Blind", "Big-Blind", "UTG", "Middle", "Late-Middle"]
-    tableList = []
-    
-    #player
-    tableList.append(player)
-    
-    #init bot
-    for i in range(game.numofbot):
-        bot = Player()
-        bot.name = "Bot " + str(i+1)
-        tableList.append(bot)
 
-    #shuffle seating
-    random.shuffle(tableList)
+    game.setup_position(player,game.numofbot)
 
-    #asssign position
-    for i, ply in enumerate(tableList):
-        ply.position = positionList[i]
 
-    
 
     # _____________Deal all player & bot 2 cards____________________
     """
@@ -235,10 +292,10 @@ while gamecontinue == True:
     """
     
     #deal 2 cards for each bot
-    for i, bot in enumerate(tableList):
+    for i, bot in enumerate(game.tableList):
         print(bot.name , "hand:",)
-        bot.card.append(deck.deal())
-        bot.card.append(deck.deal())
+        bot.card.append(deck.deal_fromdeck())
+        bot.card.append(deck.deal_fromdeck())
         print(bot.card[0],",",bot.card[1])
         print("Position:", bot.position)
 
